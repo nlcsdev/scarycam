@@ -2,20 +2,23 @@
 v2l is an easy way to feed images to the v4l2loopback device
 """
 import time
+from cv2 import norm
 
 import ffmpeg
 import numpy as np
 
+import random
+
+
 class VideoSource():
     """
     Abstract class of a VideoSource
-
     Check WebcamSource for an example
-
     Syntax:
         class MyVideoSource(VideoSource):
             ...
     """
+
     def img_size(self):
         """Should return the size of the input image as a tuple e.g. return (1280,720)"""
         raise NotImplementedError("Please overwrite")
@@ -51,34 +54,35 @@ class FakeVideoDevice():
     def init_input(self, vid_source):
         """Initialises the input for the device, the Videosource holds all necessary information"""
         self.vid_source = vid_source
-        #input over stdin, format are raw frames, with pixformat,size and fps
+        # input over stdin, format are raw frames, with pixformat,size and fps
         self.input = ffmpeg.input("pipe:0",
                                   format="rawvideo",
                                   pix_fmt=vid_source.fmt(),
                                   video_size=vid_source.img_size(),
                                   framerate=vid_source.fps())
+        self.cInput = ffmpeg.input("pipe:0",
+                                   format="rawvideo",
+                                   pix_fmt="rgb24",
+                                   video_size=(666, 666),
+                                   framerate=vid_source.fps())
 
-    def init_output(self, dev_nr, camx=1280, camy=720, fps=30,pix_fmt="yuv420p"):
+    def init_output(self, dev_nr=0, camx=1280, camy=720, fps=30, pix_fmt="yuv420p"):
         """
         Initialises the output for the device
-
         devNr is the devicenr of the v4l2loopback device e.g. (/dev/video1 -> 1).
         To check the format of the device use cat /sys/devices/video4linux/video<<devNr>>/format).
         If its empty you can specify it as you like
-
         Syntax:
             fakeVideoDev.initOutput(69,1920,1080,fps=30)
-
         Args:
             devNr: deviceNr
             camx: width of the v4l2loopback device
             camy: height of the v4l2loopback device
             fps : fps of the v4l2loopback device
-
         Raises:
             Exception: If the input wasnt specified first, you cannot specify the output
         """
-        #check if input exists
+        # check if input exists
         if self.input is None:
             raise Exception("Specify input first")
 
@@ -89,13 +93,20 @@ class FakeVideoDevice():
                                     pix_fmt=pix_fmt,
                                     framerate=fps,
                                     s="{}x{}".format(camx, camy))
+        self.cOutput = ffmpeg.output(self.cInput,
+                                     self.VIDEODEV_STR.format(dev_nr),
+                                     format="v4l2",
+                                     vcodec="rawvideo",
+                                     pix_fmt=pix_fmt,
+                                     framerate=666,
+                                     s="{}x{}".format(camx, camy))
 
     def __delay_til_next_frame(self):
         """delays reading of the next frame to match ingoing fps"""
         timediff = (time.time() - self.last_frame_time)
-        
+
         time.sleep(max((1 / self.vid_source.fps() - timediff), 0))
-        
+
         self.last_frame_time = time.time()
 
     def stop(self):
@@ -105,10 +116,9 @@ class FakeVideoDevice():
         self.running = False
         self.ffmpeg_proc.terminate()
 
-    def run(self,quiet = True):
+    def run(self, quiet=True):
         """
         Runs an endless loop of consuming images from the source and sending them to the Device
-
         Syntax:
             webcam = WebcamSource()
             fvd.initInput(webcam)
@@ -124,16 +134,39 @@ class FakeVideoDevice():
         self.ffmpeg_proc = ffmpeg.run_async(self.output,
                                             pipe_stdin=True,
                                             quiet=quiet)
+
         img_gen = self.vid_source.generator()
 
+        normal = True
+
         while self.running:
+
             image = next(img_gen).astype(np.uint8)
 
+            if(random.randint(0, 2) > 1):
+
+                if normal:
+                    normal = False
+                    self.ffmpeg_proc.stdin.close()
+                    self.ffmpeg_proc.wait()
+                    self.ffmpeg_proc = ffmpeg.run_async(self.cOutput,
+                                                        pipe_stdin=True,
+                                                        quiet=quiet)
+            else:
+                if not normal:
+                    normal = True
+                    self.ffmpeg_proc.stdin.close()
+                    self.ffmpeg_proc.wait()
+                    self.ffmpeg_proc = ffmpeg.run_async(self.output,
+                                                        pipe_stdin=True,
+                                                        quiet=quiet)
+
             if image is None:
+                print("No Next Image")
                 self.ffmpeg_proc.terminate()
                 self.running = False
                 break
 
-            self.ffmpeg_proc.stdin.write(image.tobytes())
+            self.ffmpeg_proc.stdin.write(image)
 
             self.__delay_til_next_frame()
