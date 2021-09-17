@@ -16,7 +16,7 @@ To run the program, simply double click the start.sh shell script or run in the 
 Before exiting the program, it is recommended that you disconnect your video feed in any software you may be using first. After that, simply hit ctrl-c to terminate the program.
 
 ## Customization
-This github supplies two generated videos, but you may replace them with your own videos. The only requirement is that both videos must have the same total amount of frames.
+This github supplies two generated videos, but you may replace them with your own videos. Both videos must have the same total amount of frames and the name of the video should not be deviate from the source. You can change the name of the videos if you are also altering the code accordingly.
 
 To crop your own videos accordingly, please adjust line `75` in `cam.py`, where the pixels (0,0) is located at the top left corner of your video. The parameters are `img[starting_y_pixel:ending_y_pixel, starting_x_pixel:ending_x_pixel]`. 
 ```
@@ -28,3 +28,5 @@ There are also code commented out that can store each frame of your videos to in
 ## Credits
 This Module relies heavily on [v4l2loopback](https://github.com/umlaeute/v4l2loopback) 
 and [ffmpeg-python](https://github.com/kkroening/ffmpeg-python/).
+
+It is also forked and built from [VirtualVideo](https://github.com/Flashs/virtualvideo).
