@@ -1,48 +1,32 @@
-# VirtualVideo
-VirtualVideo allows you to write simple programs that feed images to a v4l2loopback device.
+# Scary Cam
+Scary Cam is a project forked from [VirtualVideo](https://github.com/Flashs/virtualvideo). Using two videos with the same total frames, a haunted video feed can be presented to a v4l2 virtual device.
+
+Please visit the original github for additional help.
+
 ## Prerequisites 
 * [v4l2loopback](https://github.com/umlaeute/v4l2loopback)
-* ffmpeg 
+* [ffmpeg-python](https://github.com/kkroening/ffmpeg-python/) 
+* [opencv-python](https://github.com/opencv/opencv-python)
 
-## Guide
-Install virtualvideo with: 
-```pip3 install --user virtualvideo```
+## Running program
+This program would only work on an OS that uses v4l2 devices, such as a Linux OS.
 
-Install ffmpeg(preferably with your systems packagemanager) and v4l2loopback. Installing v4l2loopback can be tricky and i suggest using ```dkms``` to install/build it. (If you're using Arch-Linux theres an AUR Package for you: [v4l2loopback-dkms](https://aur.archlinux.org/packages/v4l2loopback-dkms/)).
+To run the program, simply double click the start.sh shell script or run in the termianal. You may be prompted to enter your password.
 
-## Example
-[showFish.py](examples/showFish.py) shows how to use the virtualvideo package.
+Before exiting the program, it is recommended that you disconnect your video feed in any software you may be using first. After that, simply hit ctrl-c to terminate the program.
 
-### Running the Example
-To run the example:
+## Customization
+This github supplies two generated videos, but you may replace them with your own videos. Both videos must have the same total amount of frames and the name of the video should not be deviate from the source. You can change the name of the videos if you are also altering the code accordingly.
+
+To crop your own videos accordingly, please adjust line `75` in `cam.py`, where the pixels (0,0) is located at the top left corner of your video. The parameters are `img[starting_y_pixel:ending_y_pixel, starting_x_pixel:ending_x_pixel]`. 
 ```
-$ sudo modprobe v4l2loopback video_nr=XX exclusive_caps=1
-$ cd examples
-$ python3 showFish.py
+yield img[100:self.src_y, 0:self.src_x]
 ```
-Then you should be able to open/view the webcam for example with vlc (or on webcamtest.com).
-You then should see a red goldfish getting blurred and unblurred. 
-See [example/README.md](examples/README.md) for a gif.
 
-## Errorhandling:
-* Check if the user is allowed to access the device, otherwise change permissions of ```/dev/videoXX```
-
-* Use following code to check if ffmpeg is working properly
-```$ ffmpeg -loop 1 -re -i foo.jpg -f v4l2 -vcodec rawvideo -pix_fmt yuv420p /dev/videoXXX ```
-
-* If not checkout the v4l2loopback github and wiki
-
-* If the image is distorted try unloading and loading the module, 
-maybe check ```$cat /sys/devices/virtual/video4linux/video69/format``` for the format you should use
-
-* If you want to change the format or the pixel format unload the module
-
-* If you cannot unload the module, check processes that access /dev/videoXX ($ fuser /dev/videoXX) and kill them
-
-* If you get an pixel_format not supported error, try yuyv422 as pixelformat e.g.: ```fvd.init_output(...,pix_fmt="yuyv422")``` or ```$ ffmpeg -loop 1 -re -i foo.jpg -f v4l2 -vcodec rawvideo -pix_fmt yuyv422 /dev/videoXXX ```
+There are also code commented out that can store each frame of your videos to increase performance but sacrifices storage space. Feel free to adjust the code accordingly to use this approach.
 
 ## Credits
 This Module relies heavily on [v4l2loopback](https://github.com/umlaeute/v4l2loopback) 
-and [ffmpeg-python](https://github.com/kkroening/ffmpeg-python/)
+and [ffmpeg-python](https://github.com/kkroening/ffmpeg-python/).
 
-The fish.jpg used in the examples is ["Goldfish" by Melinda van den Brink](https://www.flickr.com/photos/11750887@N04/4916553401)
+It is also forked and built from [VirtualVideo](https://github.com/Flashs/virtualvideo).
