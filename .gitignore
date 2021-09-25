@@ -121,5 +121,6 @@ dmypy.json
 frames/
 frames/normal
 frames/haunted
+current.jpg
 
 # End of https://www.gitignore.io/api/python,visualstudiocode

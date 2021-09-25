@@ -60,6 +60,7 @@ class FakeVideoDevice():
                                   pix_fmt=vid_source.fmt(),
                                   video_size=vid_source.img_size(),
                                   framerate=vid_source.fps())
+        # altered input format, intentionally different from the actual input format
         self.cInput = ffmpeg.input("pipe:0",
                                    format="rawvideo",
                                    pix_fmt="rgb24",
@@ -93,6 +94,8 @@ class FakeVideoDevice():
                                     pix_fmt=pix_fmt,
                                     framerate=fps,
                                     s="{}x{}".format(camx, camy))
+
+        # altered output format, intentionally different from the actual input format
         self.cOutput = ffmpeg.output(self.cInput,
                                      self.VIDEODEV_STR.format(dev_nr),
                                      format="v4l2",
@@ -143,8 +146,9 @@ class FakeVideoDevice():
 
             image = next(img_gen).astype(np.uint8)
 
+            # randomly decide if regular or altered output should be fed to the virtual device
             if(random.randint(0, 2) > 1):
-
+                # if altered output is expected but currently using a regular process pipe, switch over to the altered output
                 if normal:
                     normal = False
                     self.ffmpeg_proc.stdin.close()
@@ -153,6 +157,7 @@ class FakeVideoDevice():
                                                         pipe_stdin=True,
                                                         quiet=quiet)
             else:
+                # if regular output is expected but currently using an altered process pipe, switch over to the regular output
                 if not normal:
                     normal = True
                     self.ffmpeg_proc.stdin.close()
