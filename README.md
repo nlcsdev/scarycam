@@ -18,7 +18,7 @@ Before exiting the program, it is recommended that you disconnect your video fee
 ## Customization
 This github supplies two generated videos, but you may replace them with your own videos. Both videos must have the same total amount of frames and the name of the video should not be deviate from the source. You can change the name of the videos if you are also altering the code accordingly.
 
-To crop your own videos accordingly, please adjust line `75` in `cam.py`, where the pixels (0,0) is located at the top left corner of your video. The parameters are `img[starting_y_pixel:ending_y_pixel, starting_x_pixel:ending_x_pixel]`. 
+To crop your own videos accordingly, please adjust line `90` in `cam.py`, where the pixels (0,0) is located at the top left corner of your video. The parameters are `img[starting_y_pixel:ending_y_pixel, starting_x_pixel:ending_x_pixel]`. 
 ```
 yield img[100:self.src_y, 0:self.src_x]
 ```
